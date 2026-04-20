@@ -1,7 +1,14 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Download, Activity, Clock, Layers, Zap } from 'lucide-react'
+import Link from 'next/link'
+import { Download, ArrowRight, Terminal, Activity, Timer, Layers, Zap, Command } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { AsciiGrid } from '@/components/ascii-grid'
+import { SegmentedBar } from '@/components/segmented-bar'
+import { TerminalCard } from '@/components/terminal-card'
 
 const GITHUB_URL = 'https://github.com/Hude06/openusage-app'
 const DOWNLOAD_URL = 'https://github.com/Hude06/openusage-app/releases/latest/download/OpenUsage.dmg'
@@ -12,302 +19,439 @@ const GithubIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 )
 
-const features = [
+const FEATURES = [
   {
     icon: Activity,
     title: 'Live Usage Rings',
-    desc: 'Session and weekly limits visualised in real time. See exactly how much runway you have left.',
+    desc: 'Session and weekly limits rendered in real time. Remaining percentage, window reset, model breakdown — all at a glance.',
+    ascii: '[██████████░░]',
   },
   {
-    icon: Clock,
+    icon: Timer,
     title: 'Reset Countdowns',
-    desc: 'Precise countdowns to when your 5-hour session and 7-day windows reset.',
+    desc: 'Exact time to your 5-hour session flip and your 7-day weekly reset. No more guessing if you can ship one more prompt.',
+    ascii: '04:37:12 ← ←',
   },
   {
     icon: Layers,
     title: 'Claude & Codex',
-    desc: 'Tracks both Anthropic Claude and OpenAI Codex subscription limits side-by-side.',
+    desc: 'Anthropic Claude and OpenAI Codex tracked side-by-side. Max, Pro, Team plans — whichever you have.',
+    ascii: 'CL/CX · 2 svc',
   },
   {
     icon: Zap,
     title: 'Model Breakdown',
-    desc: 'Per-model token usage and 30-day cost history so you know where tokens are going.',
+    desc: 'Per-model token counts and 30-day cost history. Opus vs Sonnet vs Haiku — know where the tokens went.',
+    ascii: 'opus · snt · hk',
+  },
+  {
+    icon: Terminal,
+    title: 'Menu Bar Native',
+    desc: 'Lives in your menu bar with a status dot. Green, yellow, red — peripheral awareness without the window.',
+    ascii: '● ● ● gray→red',
+  },
+  {
+    icon: Command,
+    title: 'Keyboard First',
+    desc: 'Cmd+R to refresh, Cmd+, for settings, Cmd+Q to quit. No mouse required. No telemetry either.',
+    ascii: '⌘R · ⌘, · ⌘Q',
   },
 ]
 
-const up = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.65, ease: 'easeOut' as const, delay },
-})
-
-const AppMockup = () => (
-  <div className="relative w-full max-w-[420px] mx-auto lg:mx-0">
-    {/* Outer glow halo */}
-    <div className="absolute -inset-6 rounded-3xl bg-[var(--primary)]/5 blur-2xl pointer-events-none" />
-    <div className="float relative rounded-2xl border border-white/10 bg-[#0c0c12] overflow-hidden shadow-2xl">
-      {/* Titlebar */}
-      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/[0.05] bg-[#09090f]">
-        <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-        <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-        <span className="w-3 h-3 rounded-full bg-[#28c840]" />
-        <span className="ml-3 text-[10px] font-mono text-[var(--muted-foreground)] tracking-[0.2em]">OPEN USAGE</span>
-      </div>
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        {[
-          { label: 'CLAUDE', badge: 'MAX', session: 1, weekly: 8 },
-          { label: 'CODEX',  badge: 'PRO', session: 0, weekly: 0 },
-        ].map((item) => (
-          <div key={item.label} className="bg-[#0e0e16] rounded-xl p-4 border border-white/[0.04]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-semibold text-[var(--foreground)] tracking-wider">{item.label}</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[var(--muted-foreground)] border border-white/[0.06]">{item.badge}</span>
-              </div>
-              {/* Ring */}
-              <div className="relative w-12 h-12">
-                <svg viewBox="0 0 48 48" className="w-full h-full -rotate-90">
-                  <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3.5" />
-                  <circle cx="24" cy="24" r="18" fill="none" stroke="var(--primary)" strokeWidth="3.5"
-                    strokeDasharray={`${2 * Math.PI * 18 * item.weekly / 100} ${2 * Math.PI * 18}`}
-                    strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-[10px] font-mono stat-num text-[var(--foreground)]">{item.weekly}%</span>
-                </div>
-              </div>
-            </div>
-            {/* Bars */}
-            {[
-              { label: 'SESSION', value: item.session, window: '5hr' },
-              { label: 'WEEKLY',  value: item.weekly,  window: '7d'  },
-            ].map((bar) => (
-              <div key={bar.label} className="mb-2 last:mb-0">
-                <div className="flex justify-between mb-1">
-                  <span className="text-[9px] font-mono text-[var(--muted-foreground)] tracking-widest">{bar.label}</span>
-                  <span className="text-[9px] font-mono text-[var(--muted-foreground)]">{bar.window}</span>
-                </div>
-                <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[var(--primary)]"
-                    style={{ width: `${Math.max(bar.value, 0.8)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-        {/* Credits row */}
-        <div className="flex items-center justify-between px-1 pt-1">
-          <span className="text-[10px] font-mono text-[var(--muted-foreground)] tracking-widest">CREDITS</span>
-          <span className="text-[10px] font-mono text-[var(--primary)] stat-num">$0.00 remaining</span>
-        </div>
-      </div>
-    </div>
-  </div>
-)
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="relative min-h-screen grid-bg overflow-x-hidden">
-      {/* Background atmosphere */}
-      <div className="hero-glow fixed inset-0 pointer-events-none" />
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      {/* ── Full-page dim ASCII grid background ── */}
+      <div className="fixed inset-0 pointer-events-none opacity-60 overflow-hidden">
+        <AsciiGrid rows={120} cols={180} seed={42} className="p-2" />
+      </div>
+      <div className="fixed inset-0 pointer-events-none grid-bg" />
 
       {/* ── Nav ── */}
-      <header className="relative z-20 w-full">
-        <nav className="flex items-center justify-between px-6 sm:px-10 lg:px-16 py-5 max-w-screen-2xl mx-auto">
-          <motion.span {...up(0)} className="font-mono text-sm tracking-[0.25em] text-[var(--primary)] uppercase font-medium">
-            Open Usage
-          </motion.span>
-          <motion.div {...up(0.05)} className="flex items-center gap-6">
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="flex items-center gap-2 text-xs font-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+      <header className="relative z-30 w-full border-b border-border/60 bg-background/70 backdrop-blur-md">
+        <nav className="flex items-center justify-between px-6 sm:px-10 lg:px-16 py-4 max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-3 group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="Open Usage"
+                width={26}
+                height={26}
+                className="rounded-[5px]"
+              />
+              <span className="font-mono text-xs tracking-[0.3em] text-foreground uppercase">
+                Open Usage
+              </span>
+            </Link>
+            <Separator orientation="vertical" className="h-4 bg-border" />
+            <Link
+              href="/leaderboard"
+              className="text-xs font-mono tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors"
             >
-              <GithubIcon size={15} />
-              <span className="hidden sm:inline tracking-wider">GitHub</span>
-            </a>
-            <a
-              href={DOWNLOAD_URL}
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/8 text-[var(--primary)] text-xs font-mono tracking-wider hover:bg-[var(--primary)]/15 transition-all"
-            >
-              <Download size={12} strokeWidth={2.5} />
-              Download
-            </a>
-          </motion.div>
+              Leaderboard
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              nativeButton={false}
+              render={
+                <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                  <GithubIcon size={14} />
+                  <span className="hidden sm:inline font-mono tracking-wider uppercase text-xs">Source</span>
+                </a>
+              }
+            />
+            <Button
+              size="sm"
+              nativeButton={false}
+              render={
+                <a href={DOWNLOAD_URL}>
+                  <Download />
+                  <span className="font-mono tracking-wider uppercase text-xs">Download</span>
+                </a>
+              }
+            />
+          </div>
         </nav>
       </header>
 
       {/* ── Hero ── */}
       <main className="relative z-10 w-full">
-        <section className="w-full min-h-[calc(100vh-72px)] flex items-center px-6 sm:px-10 lg:px-16 py-16 lg:py-0 max-w-screen-2xl mx-auto">
-          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-
-            {/* Left — text */}
-            <div className="flex flex-col items-start">
-              {/* Beta pill */}
-              <motion.div {...up(0.08)} className="mb-8">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--primary)]/25 bg-[var(--primary)]/6 text-[var(--primary)] text-xs font-mono tracking-[0.2em] uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] cursor-blink" />
-                  Public Beta
-                </span>
-              </motion.div>
-
-              {/* Headline */}
-              <motion.h1
-                {...up(0.15)}
-                className="text-[clamp(2.8rem,6vw,5.5rem)] font-bold leading-[1.02] tracking-tight text-[var(--foreground)] mb-6"
+        <section className="w-full px-6 sm:px-10 lg:px-16 pt-20 pb-24 max-w-screen-2xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-16 items-center">
+            {/* Left: copy */}
+            <div className="flex flex-col items-start fade-in">
+              <Badge
+                variant="outline"
+                className="mb-8 font-mono tracking-[0.25em] uppercase text-[10px] border-border rounded-none px-3 py-1.5 h-auto"
               >
-                Know before
-                <br />
-                <span className="text-[var(--primary)]">you hit zero.</span>
-              </motion.h1>
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground cursor-blink mr-2 inline-block" />
+                v1.0 · macOS
+              </Badge>
 
-              {/* Sub */}
-              <motion.p
-                {...up(0.25)}
-                className="text-base sm:text-lg text-[var(--muted-foreground)] leading-relaxed mb-10 max-w-lg font-mono"
-              >
-                Open Usage tracks your Claude and Codex subscription limits in real time —
-                session windows, weekly caps, model breakdowns, all in one app.
-              </motion.p>
+              <h1 className="display text-[clamp(3rem,7vw,6.5rem)] mb-6 tracking-tight leading-[0.95]">
+                <span className="block text-foreground">Know</span>
+                <span className="block text-muted-foreground">before you</span>
+                <span className="block text-foreground">hit zero.</span>
+              </h1>
 
-              {/* CTA */}
-              <motion.div {...up(0.35)} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-                <a
-                  href={DOWNLOAD_URL}
-                  className="glow-btn relative flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-base tracking-wide hover:brightness-110 transition-all duration-200"
-                >
-                  <Download size={18} strokeWidth={2.5} />
-                  Download for macOS
-                  <span className="absolute -top-2.5 -right-2.5 px-1.5 py-0.5 rounded text-[9px] font-mono bg-[var(--background)] border border-[var(--primary)]/40 text-[var(--primary)] tracking-widest">
-                    FREE
-                  </span>
-                </a>
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm font-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors tracking-wider"
-                >
-                  <GithubIcon size={14} />
-                  View source
-                </a>
-              </motion.div>
+              <p className="max-w-lg text-base sm:text-lg font-mono text-muted-foreground mb-2 leading-relaxed">
+                Real-time Claude &amp; Codex subscription monitoring.
+              </p>
+              <p className="max-w-lg text-sm font-mono text-muted-foreground/70 mb-10 leading-relaxed">
+                Session windows · weekly caps · model breakdown · menu bar resident. OLED black. Zero telemetry.
+              </p>
 
-              <motion.p
-                {...up(0.42)}
-                className="mt-4 text-xs font-mono text-[var(--muted-foreground)]/60 tracking-wider"
-              >
-                macOS 13+ · Apple Silicon &amp; Intel · Free during beta
-              </motion.p>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto mb-6">
+                <Button
+                  size="lg"
+                  className="rounded-md"
+                  nativeButton={false}
+                  render={
+                    <a href={DOWNLOAD_URL}>
+                      <Download />
+                      <span className="font-mono tracking-wider uppercase text-xs">Download .dmg</span>
+                      <ArrowRight />
+                    </a>
+                  }
+                />
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  nativeButton={false}
+                  render={
+                    <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                      <GithubIcon size={14} />
+                      <span className="font-mono tracking-wider uppercase text-xs">View source</span>
+                    </a>
+                  }
+                />
+              </div>
+
+              <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-muted-foreground/50">
+                macOS 13+ · Apple Silicon &amp; Intel · free during beta
+              </p>
             </div>
 
-            {/* Right — mockup */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-              className="flex justify-center lg:justify-end"
-            >
-              <AppMockup />
-            </motion.div>
+            {/* Right: live CLI readout + crop marks */}
+            <div className="relative fade-in d2">
+              <div className="relative crop-mark bg-background/50 backdrop-blur-sm border border-border rounded-md overflow-hidden">
+                <div className="terminal-bar">
+                  <span className="terminal-dot" />
+                  <span className="terminal-dot" />
+                  <span className="terminal-dot" />
+                  <span className="ml-3 label-sm truncate">~ · open-usage --watch</span>
+                </div>
+
+                <div className="p-6 sm:p-8 space-y-6 font-mono text-sm">
+                  <div className="text-muted-foreground">
+                    <span className="text-foreground">$</span> open-usage --watch
+                    <span className="cursor-blink ml-0.5">▊</span>
+                  </div>
+
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <span className="display text-[5rem] sm:text-[6rem] leading-none">92</span>
+                      <span className="text-2xl text-muted-foreground ml-1">%</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="label-sm mb-1">status</div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" />
+                        <span className="font-mono text-xs uppercase tracking-wider">healthy</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="label-sm">session · 5hr</span>
+                        <span className="font-mono text-[10px] text-muted-foreground">04:12:38</span>
+                      </div>
+                      <SegmentedBar percent={8} segments={28} />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="label-sm">weekly · 7d</span>
+                        <span className="font-mono text-[10px] text-muted-foreground">5d 02h</span>
+                      </div>
+                      <SegmentedBar percent={22} segments={28} />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-border/60 grid grid-cols-3 gap-4 text-[11px]">
+                    <div>
+                      <div className="label-sm mb-1">claude</div>
+                      <div className="font-mono text-foreground">max · 92%</div>
+                    </div>
+                    <div>
+                      <div className="label-sm mb-1">codex</div>
+                      <div className="font-mono text-foreground">pro · 74%</div>
+                    </div>
+                    <div>
+                      <div className="label-sm mb-1">tick</div>
+                      <div className="font-mono text-muted-foreground">0.5s</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-3 px-1">
+                <span className="label-sm">x: 0 y: 0</span>
+                <span className="label-sm">tty · live</span>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ── Divider ── */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-[var(--primary)]/15 to-transparent" />
+        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-10 lg:px-16">
+          <div className="dot-divider w-full" />
+        </div>
+
+        {/* ── App mockup section ── */}
+        <section className="w-full px-6 sm:px-10 lg:px-16 py-24 max-w-screen-2xl mx-auto">
+          <div className="mb-10 flex items-end justify-between gap-6 flex-wrap">
+            <div className="max-w-xl">
+              <p className="label mb-4">§ 01 · Interface</p>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
+                Instrument-panel UI.
+              </h2>
+              <p className="font-mono text-sm text-muted-foreground leading-relaxed">
+                Nothing Design System. OLED black. Segmented progress bars. Doto hero numerics. Space Mono labels. No shadows. No gradients. No chrome.
+              </p>
+            </div>
+            <span className="label-sm">Fig · 01</span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TerminalCard title="OPEN USAGE · CLAUDE.MAX">
+              <div className="p-6 space-y-6">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="display text-6xl">87</span>
+                    <span className="font-mono text-xl text-muted-foreground ml-1">%</span>
+                  </div>
+                  <span className="label-sm">remaining</span>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="label-sm">Session · 5hr</span>
+                      <span className="font-mono text-[10px] text-muted-foreground">03:42:18</span>
+                    </div>
+                    <SegmentedBar percent={13} segments={24} />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="label-sm">Weekly · 7d</span>
+                      <span className="font-mono text-[10px] text-muted-foreground">4d 11h</span>
+                    </div>
+                    <SegmentedBar percent={34} segments={24} />
+                  </div>
+                </div>
+                <Separator className="bg-border" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="label-sm mb-1">Opus</div>
+                    <SegmentedBar percent={62} segments={16} tone="warn" />
+                  </div>
+                  <div>
+                    <div className="label-sm mb-1">Sonnet</div>
+                    <SegmentedBar percent={28} segments={16} />
+                  </div>
+                </div>
+              </div>
+            </TerminalCard>
+
+            <TerminalCard title="OPEN USAGE · CODEX.PRO">
+              <div className="p-6 space-y-6">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="display text-6xl">42</span>
+                    <span className="font-mono text-xl text-muted-foreground ml-1">%</span>
+                  </div>
+                  <span className="label-sm">remaining</span>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="label-sm">Session · 5hr</span>
+                      <span className="font-mono text-[10px] text-muted-foreground">01:14:06</span>
+                    </div>
+                    <SegmentedBar percent={58} segments={24} tone="warn" />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="label-sm">Weekly · 7d</span>
+                      <span className="font-mono text-[10px] text-muted-foreground">2d 03h</span>
+                    </div>
+                    <SegmentedBar percent={74} segments={24} tone="danger" />
+                  </div>
+                </div>
+                <Separator className="bg-border" />
+                <div className="flex items-center justify-between">
+                  <span className="label-sm">Credits</span>
+                  <span className="font-mono text-sm text-foreground stat-num">$12.47 left</span>
+                </div>
+              </div>
+            </TerminalCard>
+          </div>
+        </section>
+
+        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-10 lg:px-16">
+          <div className="dot-divider w-full" />
+        </div>
 
         {/* ── Features ── */}
-        <section className="w-full py-24 px-6 sm:px-10 lg:px-16 max-w-screen-2xl mx-auto">
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-mono tracking-[0.35em] text-[var(--muted-foreground)] uppercase mb-12 text-center lg:text-left"
-          >
-            What it tracks
-          </motion.p>
+        <section className="w-full px-6 sm:px-10 lg:px-16 py-24 max-w-screen-2xl mx-auto">
+          <div className="mb-10 flex items-end justify-between gap-6 flex-wrap">
+            <div className="max-w-xl">
+              <p className="label mb-4">§ 02 · Capabilities</p>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">What it tracks.</h2>
+            </div>
+            <span className="label-sm">06 modules</span>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-            {features.map((f, i) => (
-              <motion.div
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURES.map((f, i) => (
+              <Card
                 key={f.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.07, ease: 'easeOut' }}
-                className="group p-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:border-[var(--primary)]/20 hover:bg-[var(--card)]/80 transition-all duration-300"
+                className="rounded-md border-border bg-card/60 backdrop-blur-sm hover:bg-card transition-colors group"
               >
-                <div className="mb-4 w-10 h-10 rounded-xl bg-[var(--primary)]/8 border border-[var(--primary)]/15 flex items-center justify-center text-[var(--primary)] group-hover:bg-[var(--primary)]/15 transition-colors">
-                  <f.icon size={18} strokeWidth={1.5} />
+                <div className="px-5 py-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 border border-border flex items-center justify-center text-foreground/80 group-hover:text-foreground transition-colors rounded-sm">
+                        <f.icon size={14} strokeWidth={1.5} />
+                      </div>
+                      <span className="label">§ 02.{String(i + 1).padStart(2, '0')}</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-muted-foreground/60 tracking-tight">{f.ascii}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-medium tracking-tight mb-1.5">{f.title}</h3>
+                    <p className="font-mono text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-[var(--foreground)] mb-2 tracking-tight">{f.title}</h3>
-                <p className="text-xs font-mono text-[var(--muted-foreground)] leading-relaxed">{f.desc}</p>
-              </motion.div>
+              </Card>
             ))}
           </div>
         </section>
 
-        {/* ── Bottom CTA ── */}
-        <section className="w-full px-6 sm:px-10 lg:px-16 pb-28 max-w-screen-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="relative w-full rounded-3xl border border-[var(--primary)]/12 bg-[var(--primary)]/4 overflow-hidden px-8 sm:px-16 py-16 text-center"
-          >
-            {/* Decorative glow */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--primary)]/5 to-transparent pointer-events-none" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-px bg-gradient-to-r from-transparent via-[var(--primary)]/40 to-transparent" />
+        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-10 lg:px-16">
+          <div className="dot-divider w-full" />
+        </div>
 
-            <h2 className="relative text-3xl sm:text-4xl font-bold text-[var(--foreground)] mb-4 tracking-tight">
-              Stop guessing your limits.
-            </h2>
-            <p className="relative text-sm font-mono text-[var(--muted-foreground)] mb-8 max-w-md mx-auto leading-relaxed">
-              Free during the beta period. No account, no signup, no nonsense.
-            </p>
-            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
-                href={DOWNLOAD_URL}
-                className="glow-btn flex items-center gap-3 px-8 py-4 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-base tracking-wide hover:brightness-110 transition-all w-full sm:w-auto justify-center"
-              >
-                <Download size={18} strokeWidth={2.5} />
-                Download for macOS
-              </a>
-              <span className="text-xs font-mono text-[var(--muted-foreground)]/50 tracking-widest">
-                macOS 13+ · Free
-              </span>
+        {/* ── Terminal CTA ── */}
+        <section className="w-full px-6 sm:px-10 lg:px-16 py-24 max-w-screen-2xl mx-auto">
+          <TerminalCard title="~/open-usage · install.sh" className="max-w-3xl mx-auto">
+            <div className="p-8 font-mono text-sm space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-muted-foreground/50 select-none">$</span>
+                <span className="text-foreground">curl -L -o OpenUsage.dmg \</span>
+              </div>
+              <div className="pl-6 text-muted-foreground break-all">
+                https://github.com/Hude06/openusage-app/releases/latest/download/OpenUsage.dmg
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-muted-foreground/50 select-none">$</span>
+                <span className="text-foreground">open OpenUsage.dmg</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-muted-foreground/50 select-none">$</span>
+                <span className="text-foreground">
+                  drag → /Applications
+                  <span className="cursor-blink ml-1 text-foreground">▊</span>
+                </span>
+              </div>
+              <Separator className="bg-border my-4" />
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <p className="text-xs text-muted-foreground">
+                  or grab it from <span className="text-foreground">Releases</span> — no account, no signup, no tracking.
+                </p>
+                <Button
+                  size="sm"
+                  nativeButton={false}
+                  render={
+                    <a href={DOWNLOAD_URL}>
+                      <Download />
+                      <span className="font-mono tracking-wider uppercase text-xs">.dmg</span>
+                    </a>
+                  }
+                />
+              </div>
             </div>
-          </motion.div>
+          </TerminalCard>
         </section>
       </main>
 
       {/* ── Footer ── */}
-      <footer className="relative z-10 w-full border-t border-[var(--border)]">
+      <footer className="relative z-10 w-full border-t border-border/60 mt-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 sm:px-10 lg:px-16 py-8 max-w-screen-2xl mx-auto">
-          <span className="text-xs font-mono text-[var(--muted-foreground)] tracking-widest uppercase">
-            Open Usage · opentopenusage.com
-          </span>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" width={18} height={18} className="rounded-[4px]" />
+            <span className="label tracking-[0.25em]">Open Usage · v1.0 · mit</span>
+          </div>
           <div className="flex items-center gap-6">
             <a
               href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="flex items-center gap-1.5 text-xs font-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+              className="flex items-center gap-1.5 label hover:text-foreground transition-colors"
             >
               <GithubIcon size={12} />
-              <span>Source</span>
+              <span>github</span>
             </a>
-            <span className="text-[var(--muted-foreground)]/30 text-xs">·</span>
-            <span className="text-xs font-mono text-[var(--muted-foreground)]">Beta v1.0</span>
+            <Link href="/leaderboard" className="label hover:text-foreground transition-colors">
+              leaderboard
+            </Link>
+            <span className="label-sm">2026</span>
           </div>
         </div>
       </footer>
